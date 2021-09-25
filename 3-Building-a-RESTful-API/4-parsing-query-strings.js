@@ -21,13 +21,13 @@ const server = http.createServer(function(req, res){    // This callback functio
     var trimmedPath = path.replace( /^\/+|\/+$/g,'');   // Trim off the excess slashes, e.g, /foo/ becomes /foo
 
     // Get the query string as an Object
-    var queryStringObject = parsedUrl.query;            // This is why there is that "true" in the url.parse method
+    var queryStringObject = parsedUrl.query;            // This is why there is that "true" in the url.parse method. It turns parsedUrl.query to an object rather than the literal string like "buzz=bazz"
     // Get the HTTP Method
     var method = req.method.toUpperCase(); // The toUpperCase() method is called to just standardize the HTTP methods.
     // Send the "Hello, World!" response
     res.end('Hello, World!\n');
     // Log the request path
-    console.log('Request received on path:'+trimmedPath+' with method: '+ method + ' and with these query string parameters ',queryStringObject);
+    console.log('Request received on path:'+trimmedPath+' with method: '+ method + ' and with these query string parameters ',queryStringObject); // Comma is needed as queryStringObject is an object and not a string and concatenating a string with an Object crashes the process.
 });
 
 // 2. Start the server, and have it listen on port 3000
