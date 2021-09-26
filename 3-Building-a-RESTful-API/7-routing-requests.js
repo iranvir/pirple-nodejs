@@ -1,10 +1,10 @@
-/* 
+ /* 
 * Starting a server -- Video 9 -- Routing Requests
 */
 // Dependencies
 const http = require('http');
 const url = require('url');
-const StringDecoder = require('string_decoder').StringDecoder; // To much retarded. Please refer the doc, future me! Used it to get the HTTP payload    
+const StringDecoder = require('string_decoder').StringDecoder; // Too much retarded. Please refer the doc, future me! Used it to get the HTTP payload    
 
 // 1. Defining the server
 const server = http.createServer(function(req, res){    // This callback function gets called everytime someone sends a request to port 3000
@@ -39,10 +39,38 @@ const server = http.createServer(function(req, res){    // This callback functio
     req.on('end',function(){                            // We need to move the sending of request res.end("Hello, World\n") and logging of request path inside the req.on('end'...) function. Because async JS would mean they might run before we are done processing the entire payload.
                                                         // Which is not what we want. The req.on('end'...) event will always be called, even if there is no payload.
         buffer += decoder.end();
-        // Send the "Hello, World!" response
-        res.end('Hello, World!\n');
-        // Log the request path
-        console.log('Request received with this payload:', buffer); // Comma is needed as queryStringObject is an object and not a string and concatenating a string with an Object crashes the process.
+
+        // Choose the handler this request should go to. If one is not found use the notFound handler.
+
+        var chosenHandler = typeof(router[trimmedPath]) != 'undefined' ? router[trimmedPath] : handlers.notFound;
+        // Construct the data object to send to the handler
+        var data = {
+            'trimmedPath' : trimmedPath,
+            'queryStringObject' : queryStringObject,
+            'method' : method,
+            'headers' : headers,
+            'payload' : buffer
+        }
+
+        // Route the request to the handler specified in the router
+        chosenHandler(data,function(statusCode, payload){
+            // Use the status code called back by the hadnler, or default to 200
+            statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
+
+            // Use the payload called back by the handler, or default to an empty object
+            payload = typeof(payload) == 'object' ? payload : {};
+
+            // Convert the payload to a string
+            var payloadString = JSON.stringify(payload);
+
+            // Return the response
+            res.writeHead(statusCode);
+            res.end(payloadString);
+
+            // Log the request
+            
+            console.log('Returning this response: ', statusCode, payloadString); // Comma is needed as queryStringObject is an object and not a string and concatenating a string with an Object crashes the process.
+        });
     });
 });
 
@@ -51,7 +79,21 @@ server.listen(3000,function(){
     console.log("The server is listening on port 3000 now");
 });
 
-// Questions and Doubts?
-// What does it mean by "bits" or streams? Are these different TCP packets, or is the payload split over different HTTP requests? If the latter is the case, then how is the state maintained across requests?
-// What does it mean by the request object "emitting" 'data' event? What does it mean to bind to an event?
-// HTTP GET has no payload attached to it. So we need to POST something to the server, for us to be able to stream data to it.
+//Define the handlers
+var handlers = {};
+
+// Sample handler
+handlers.sample = function(data,callback){ // "data" argument contains everything we have parsed out of request. Like HTTP headers, path, etc
+    // Callback an HTTP status code, and a payload object
+    callback(406, {'name': 'sample handler'});
+};
+
+// Not found handler
+handlers.notFound = function(data,callback){
+    callback(404);
+};
+
+// Defining a path based router object
+var router = {
+    'sample' : handlers.sample
+};
