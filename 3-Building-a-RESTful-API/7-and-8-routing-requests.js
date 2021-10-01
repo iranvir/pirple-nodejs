@@ -1,5 +1,5 @@
  /* 
-* Starting a server -- Video 9 -- Routing Requests
+* Starting a server -- Video 9 and 10-- Routing Requests and setting header to Content-Type: application/json
 */
 // Dependencies
 const http = require('http');
@@ -64,6 +64,7 @@ const server = http.createServer(function(req, res){    // This callback functio
             var payloadString = JSON.stringify(payload);
 
             // Return the response
+            res.setHeader('Content-Type','application/json');
             res.writeHead(statusCode);
             res.end(payloadString);
 
