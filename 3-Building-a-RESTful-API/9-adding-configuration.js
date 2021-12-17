@@ -3,12 +3,39 @@
 */
 // Dependencies
 const http = require('http');
+const https = require('https');
 const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
+const fs = require('fs');
+const config = require('./config');
 
+// Instantiating the HTTP Server
+const httpServer = http.createServer(function(req, res){
+    unifiedServer(req,res);
+});
 
-const server = http.createServer(function(req, res){
+// Start the HTTP Server
+httpServer.listen(config.httpPort,function(){
+    console.log("The server is listening on port "+config.httpPort);
+});
 
+// Instantiating the HTTPS Server
+const httpsServerOptions = {
+    'key' : fs.readFileSync('./https/key.pem'),
+    'cert' : fs.readFileSync('./https/cert.pem')
+};
+
+const httpsServer = https.createServer(httpsServerOptions, function(req, res){
+    unifiedServer(req,res);
+});
+
+// Start the HTTPS Server
+httpsServer.listen(config.httpsPort,function(){
+    console.log("The server is listening on port "+config.httpsPort);
+});
+
+// Server logic for both the http and https server
+var unifiedServer = function(req,res){
     var parsedUrl = url.parse(req.url,true);
     var path = parsedUrl.pathname;
     var trimmedPath = path.replace( /^\/+|\/+$/g,'');
@@ -47,8 +74,9 @@ const server = http.createServer(function(req, res){
             console.log('Returning this response: ', statusCode, payloadString);
         });
     });
-});
+};
 
+// Define Handlers
 var handlers = {};
 
 handlers.sample = function(data,callback){
@@ -62,8 +90,3 @@ handlers.notFound = function(data,callback){
 var router = {
     'sample' : handlers.sample
 }; 
-
-// Start the server to listen on port 3000
-server.listen(3000,function(){
-    console.log("The server is listening on port 3000 now");
-});
