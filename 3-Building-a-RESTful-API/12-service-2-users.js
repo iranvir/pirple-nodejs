@@ -1,5 +1,5 @@
  /* 
-* Starting a server -- Video 12 -- /ping Server
+* Starting a server -- Video 14 -- Adding /users service
 */
 // Dependencies
 const http = require('http');
@@ -8,6 +8,7 @@ const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
 const fs = require('fs');
 const config = require('./config');
+const handlers = require('./lib/handlers');
 
 // Instantiating the HTTP Server
 const httpServer = http.createServer(function(req, res){
@@ -76,19 +77,8 @@ var unifiedServer = function(req,res){
     });
 };
 
-// Define Handlers
-var handlers = {};
-
-// Ping handler
-handlers.ping = function(data, callback){
-    callback(200);
-}
-
-handlers.notFound = function(data,callback){
-    callback(404);
-};
-
 // A PATH based router
 var router = {
-    'ping' : handlers.ping
+    'ping' : handlers.ping,
+    'users' : handlers.users
 }; 

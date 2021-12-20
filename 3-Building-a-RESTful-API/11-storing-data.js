@@ -1,5 +1,5 @@
  /* 
-* Starting a server -- Video 12-13 -- Adding configuration
+* Starting a server -- Video 13 -- Adding configuration
 */
 // Dependencies
 const http = require('http');
@@ -8,13 +8,6 @@ const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
 const fs = require('fs');
 const config = require('./config');
-const _data = require('./lib/data');
-
-// TESTING
-// @TODO delete this
-_data.read('test','newFile',function(err,data){
-    console.log('This was the error',err, 'and this was the data', data);
-});
 
 // Instantiating the HTTP Server
 const httpServer = http.createServer(function(req, res){
