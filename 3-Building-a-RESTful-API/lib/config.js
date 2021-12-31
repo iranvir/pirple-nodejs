@@ -10,7 +10,7 @@ environments.staging = {
     'httpPort' : 3000,
     'httpsPort' : 3001,
     'envName' : 'staging',
-    'hashingSecret' : 'thisIsASecret'
+    'hashingSecret' : 'thisIsASecret' // Whyy is a user's hash part of the config.js file...makes no sense
 };
 
 // Production environment

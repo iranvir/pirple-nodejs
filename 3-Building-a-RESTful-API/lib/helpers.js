@@ -19,5 +19,15 @@ helpers.hash = function(str){ // No callbacks. Why?
     }
 };
 
+// Parse a JSON string to an object in all cases, without throwing..because by default it throws the failure and don't return anything (I think)
+helpers.parseJsonToObject = function(str){
+    try{
+        var obj = JSON.parse(str);
+        return obj;
+    } catch(e) {
+        return {};
+    }
+};
+
 // Export the module
 module.exports = helpers;

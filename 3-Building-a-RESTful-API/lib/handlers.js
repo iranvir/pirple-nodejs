@@ -1,5 +1,5 @@
 /*
-* Request handlers -- Video 14
+* Request handlers -- Video 14 -- /users service
 */
 
 // Dependencies
@@ -40,6 +40,29 @@ handlers._users.post = function(data,callback) {
             if(err){ // If an error is returned that means the user doesn't already exist, since the file named after his phone number doesn't exist, so we can continue.
                 // Hash the password
                 var hashedPassword = helpers.hash(password);
+                // Create the user object
+                if(hashedPassword) {
+                    var userObject = {
+                        'firstName' : firstName,
+                        'lastName' : lastName,
+                        'phone' : phone,
+                        'hashedPassword': hashedPassword,
+                        'tosAgreement' : true
+                    };
+    
+                    // Store the user
+                    _data.create('users',phone,userObject,function(err){
+                        if (!err){
+                            callback(200);
+                        } else {
+                            console.log(err);
+                            callback(500,{'Error': 'Could not create the new user'});
+                        }
+                    });
+                } else {
+                    callback(500, {'Error':'Could not hash the user\'s password'});
+                }
+
             } else {
                 // User already exists
                 callback(400,{'Error':'A user with that phone number already exists'});
@@ -50,9 +73,28 @@ handlers._users.post = function(data,callback) {
     }
 };
 
-//Users - get
+// Users - get
+// Required data: phone
+// Optional data: none
+// @TODO Only let an authenticated user acces their object. Don't let them access anyone else's 
 handlers._users.get = function(data,callback) {
-    
+    // Check that the phone number is valid
+    console.log(data.queryStringObject.phone.trim());
+    var phone = typeof(data.queryStringObject.phone) == 'string' && data.queryStringObject.phone.trim().length == 10 ? data.queryStringObject.phone.trim() : false;
+    if(phone){
+        // Lookup the user
+        _data.read('users',phone,function(err,data){
+            if(!err && data){
+                //Remove the hashed password from the user object before returning it to the requester.
+                delete data.hashedPassword;
+                callback(200,data);
+            } else {
+                callback(404);
+            }
+        });
+    } else {
+        callback(400,{'Error': 'Missing required fields'});
+    }
 };
 
 //Users - put
