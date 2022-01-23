@@ -10,7 +10,8 @@ environments.staging = {
     'httpPort' : 3000,
     'httpsPort' : 3001,
     'envName' : 'staging',
-    'hashingSecret' : 'thisIsASecret' // Whyy is a user's hash part of the config.js file...makes no sense
+    'hashingSecret' : 'thisIsASecret', // Whyy is a user's hash part of the config.js file...makes no sense
+    'maxChecks' : 5
 };
 
 // Production environment
@@ -18,7 +19,8 @@ environments.production = {
     'httpPort' : 5000,
     'httpsPort' : 5001,
     'envName' : 'production',
-    'hashingSecret' : 'thisIsASecret'
+    'hashingSecret' : 'thisIsASecret',
+    'maxChecks' : 5
 };
 
 // Determine which environment was passed as a command-line argument

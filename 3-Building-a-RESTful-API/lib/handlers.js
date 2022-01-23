@@ -4,6 +4,7 @@
 
 // Dependencies
 const { unwatchFile } = require('fs');
+const { deflateRawSync } = require('zlib');
 const _data = require('./data');
 const helpers = require('./helpers');
 
@@ -349,6 +350,40 @@ handlers._tokens.verifyToken = function(id,phone,callback){
         }
     });
 }
+
+// Checks handler
+handlers.checks = function(data,callback){
+    var acceptableMethods = ['post', 'get','put','delete'];
+    if(acceptableMethods.indexOf(data.method) > -1 ){
+        handlers._checks[data.method](data,callback);
+    } else {
+        callback(405);
+    }
+};
+
+// Container for all the checks methods
+handlers._checks = {};
+
+// Checks - post
+// Required data: protocol, url, method, successCodes, timeoutSeconds
+// Optional data: none
+handlers._checks.post = function(data,callback){
+    // Validate input
+    var protocol = typeof(data.payload.protocol) == 'string' && ['https','http'].indexOf(data.payload.protocol) > -1 ? data.payload.payload : false;
+    var url = typeof(data.payload.url) == 'string' && data.payload.url.trim().length > 0 ? data.payload.url.trim() : false;
+    var method = typeof(data.payload.method) == 'string' && ['post','get','put','delete'].indexOf(data.payload.method) > -1 ? data.payload.method : false;
+    var successCodes = typeof(data.payload.successCodes) == 'object' && data.payload.successCodes instanceof Array && data.payload.successCodes.length > 0 ? data.payload.successCodes : false;
+    var timeoutSeconds = typeof(data.payload.timeoutSeconds) == 'number' && data.payload.timeoutSeconds % 1 === 0 && data.payload.timeoutSeconds >= 1 && data.payload.timeoutSeconds <= 5  ? data.payload.timeoutSeconds : false;
+    
+    if(protocol && url && method && timeoutSeconds){
+        // Get the token from the headers
+        var token = typeof(data.queryStringObject.id) == 'string' && data.queryStringObject.id.trim().length == 20 ? data.queryStringObject.id.trim() : false;
+
+    } else {
+        callback(400,{'Error':'Missing required inputs or inputs are invalid'});
+    }
+}
+
 
 // Ping handler
 handlers.ping = function(data, callback){
