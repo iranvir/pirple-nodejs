@@ -4,6 +4,9 @@
 
 // Dependencies
 const { unwatchFile } = require('fs');
+const { config } = require('process');
+const { checkServerIdentity } = require('tls');
+const { callbackify } = require('util');
 const { deflateRawSync } = require('zlib');
 const _data = require('./data');
 const helpers = require('./helpers');
@@ -165,7 +168,6 @@ handlers._users.put = function(data,callback) {
 
 // Users - delete
 // Required field : phone
-// @TODO Only let an authenticated user delete their object. Don't let them delete anyone else's
 // @TODO Cleanup (delete) any of the data files associated with this user
 handlers._users.delete = function(data,callback) {
     // Check that the phone number is valid
@@ -376,8 +378,44 @@ handlers._checks.post = function(data,callback){
     var timeoutSeconds = typeof(data.payload.timeoutSeconds) == 'number' && data.payload.timeoutSeconds % 1 === 0 && data.payload.timeoutSeconds >= 1 && data.payload.timeoutSeconds <= 5  ? data.payload.timeoutSeconds : false;
     
     if(protocol && url && method && timeoutSeconds){
-        // Get the token from the headers
-        var token = typeof(data.queryStringObject.id) == 'string' && data.queryStringObject.id.trim().length == 20 ? data.queryStringObject.id.trim() : false;
+        // Get the token from the headers. Why is the token in the HTTP headers sometimes and in the query string in others
+        var token = typeof(data.headers.token) == 'string' ? data.token : false;
+
+        // Look up the user by reading the token
+        _data.read('tokens',token,function(err,tokenData){
+            if(!err && tokenData){
+                var userPhone = tokenData.phone;
+
+                // Look up the user data
+                _data.read('users',userPhone,function(err,userData){
+                    if(!err && userData){
+                        var userChecks = typeof(userData.checks) == 'object' && userData.checks instanceof Array ? userData.checks : [];
+                        // Verify that the user has less than the number of max-checks-per-user
+                        if(userChecks.length < config.maxChecks){
+                            // Create a random id for the check
+                            var check = helpers.createRandomString(20);
+
+                            // Create the check object, and include the user's phone
+                            var checkObject = {
+                                'id': checkid,
+                                'userPhone' : userPhone,
+                                'protocol' : protocol,
+                                'url' : url,
+                                'successCodes' : successCodes,
+                                'timeoutSeconds' : timeoutSeconds
+                            };
+                        } else {
+                            callback(400,{'Error':'The User already has maximum number of checks ('+config.maxChecks+')'})
+                        }
+                    } else {
+                        callback(403);
+                    }
+                });
+
+            } else {
+                callback(403);
+            }
+        });
 
     } else {
         callback(400,{'Error':'Missing required inputs or inputs are invalid'});
